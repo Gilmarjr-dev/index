@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bora - V2.0</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #121212; color: #e0e0e0; padding: 15px; text-align: center; margin: 0; }
+        .container { max-width: 500px; margin: auto; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #333; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        
+        /* Sistema de Abas */
+        .tabs { display: flex; margin-bottom: 20px; gap: 10px; }
+        .tab { flex: 1; padding: 12px; background: #333; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .tab.active { background: #f1c40f; color: black; }
+
+        .modulo { display: none; }
+        .modulo.active { display: block; }
+
+        input { width: 90%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #444; background: #252525; color: white; font-size: 16px; }
+        button { width: 100%; padding: 15px; margin: 10px 0; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.2s; }
+        
+        .btn-apps { background-color: #f1c40f; color: black; }
+        .btn-ida { background-color: #3498db; color: white; }
+        .btn-volta { background-color: #2ecc71; color: white; }
+        
+        .resultado { margin-top: 20px; padding: 15px; background: #252525; border-radius: 10px; border-left: 5px solid #f1c40f; text-align: left; }
+        .veredito { font-size: 1.2rem; font-weight: bold; text-align: center; margin-top: 10px; padding: 10px; border-radius: 5px; }
+        
+        #btnCopiar { background: #e67e22; color: white; display: none; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2 style="color: #f1c40f; margin-bottom: 5px;">🚗 BORA</h2>
+        <p style="margin-top: 0; opacity: 0.7;">Controle de Viagem - V2.0</p>
+
+        <div class="tabs">
+            <div id="tab1" class="tab active" onclick="mudarAba(1)">PARTICULAR</div>
+            <div id="tab2" class="tab" onclick="mudarAba(2)">APPS (UBER/99)</div>
+        </div>
+
+        <div id="modulo1" class="modulo active">
+            <input type="time" id="p_hora" value="12:00">
+            <input type="text" id="p_ori" placeholder="Origem">
+            <input type="text" id="p_dest" placeholder="Destino">
+            <input type="number" id="p_km" placeholder="Total de KM Rodados">
+            <button class="btn-ida" onclick="calcParticular(1)">SÓ IDA (R$ 3,00/km)</button>
+            <button class="btn-volta" onclick="calcParticular(2)">IDA E VOLTA (R$ 4,00/km)</button>
+        </div>
+
+        <div id="modulo2" class="modulo">
+            <input type="number" id="a_valor" placeholder="Valor da Corrida (R$)" step="0.01">
+            <input type="number" id="a_km" placeholder="Distância Total (KM)" step="0.1">
+            <input type="number" id="a_min" placeholder="Tempo (Minutos)">
+            <input type="number" id="a_nota" placeholder="Nota do Passageiro" step="0.01" value="4.90">
+            <button class="btn-apps" onclick="calcApps()">ANALISAR CORRIDA 🚀</button>
+        </div>
+
+        <div id="resBox" class="resultado" style="display: none;">
+            <div id="resTexto"></div>
+            <div id="resVeredito" class="veredito"></div>
+            <button id="btnCopiar" onclick="copiar()">📋 COPIAR MENSAGEM</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function mudarAba(aba) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.modulo').forEach(m => m.classList.remove('active'));
+        document.getElementById('tab' + aba).classList.add('active');
+        document.getElementById('modulo' + aba).classList.add('active');
+        document.getElementById('resBox').style.display = 'none';
+    }
+
+    function calcParticular(tipo) {
+        const h = document.getElementById('p_hora').value;
+        const km = parseFloat(document.getElementById('p_km').value);
+        const ori = document.getElementById('p_ori').value || "Origem";
+        const dest = document.getElementById('p_dest').value || "Destino";
+
+        if (!km) return alert("Insira os KMs!");
+
+        const hora = parseInt(h.split(':')[0]);
+        let taxa = 0;
+        if (hora >= 0 && hora < 6) taxa = 15;
+        else if (hora >= 21) taxa = 10;
+        else if (hora < 7 || (hora >= 19 && hora < 21)) taxa = 5;
+
+        const valKm = (tipo === 1) ? 3 : 4;
+        const total = (km * valKm) + taxa;
+        const tTexto = (tipo === 1) ? "SÓ IDA" : "IDA E VOLTA";
+
+        const msg = `Olá! O orçamento (${tTexto}) para o trajeto ${ori} x ${dest} às ${h} fica em R$ ${total.toFixed(2)}.`;
+        
+        document.getElementById('resTexto').innerHTML = `<b>Particular:</b> ${tTexto}<br><b>KM:</b> ${km} | <b>Taxa:</b> R$ ${taxa.toFixed(2)}<br><br>${msg}`;
+        document.getElementById('resVeredito').style.display = 'none';
+        document.getElementById('btnCopiar').style.display = 'block';
+        document.getElementById('resBox').style.display = 'block';
+    }
+
+    function calcApps() {
+        const v = parseFloat(document.getElementById('a_valor').value);
+        const k = parseFloat(document.getElementById('a_km').value);
+        const m = parseFloat(document.getElementById('a_min').value);
+        const n = parseFloat(document.getElementById('a_nota').value);
+
+        if (!v || !k || !m) return alert("Preencha os dados da corrida!");
+
+        const gKm = v / k;
+        const gH = (v / m) * 60;
+        const boxVeredito = document.getElementById('resVeredito');
+
+        document.getElementById('resTexto').innerHTML = `
+            <b>G/KM:</b> R$ ${gKm.toFixed(2)}<br>
+            <b>G/Hora:</b> R$ ${gH.toFixed(2)}<br>
+            <b>Nota:</b> ${n.toFixed(2)}
+        `;
+
+        if (gKm >= 2 && gH >= 40 && n >= 4.8) {
+            boxVeredito.innerText = "VEREDITO: ACEITAR AGORA! 🚀";
+            boxVeredito.style.backgroundColor = "#2ecc71";
+            boxVeredito.style.color = "white";
+        } else if (gKm < 1.9 || gH < 35 || n < 4.7) {
+            boxVeredito.innerText = "VEREDITO: RECUSAR! 🛑";
+            boxVeredito.style.backgroundColor = "#e74c3c";
+            boxVeredito.style.color = "white";
+        } else {
+            boxVeredito.innerText = "VEREDITO: LIMITE/CUIDADO ⚠️";
+            boxVeredito.style.backgroundColor = "#f1c40f";
+            boxVeredito.style.color = "black";
+        }
+
+        boxVeredito.style.display = 'block';
+        document.getElementById('btnCopiar').style.display = 'none';
+        document.getElementById('resBox').style.display = 'block';
+    }
+
+    function copiar() {
+        const texto = document.getElementById('resTexto').innerText.split('\n\n')[1];
+        navigator.clipboard.writeText(texto);
+        alert("Copiado!");
+    }
+</script>
+
+</body>
+</html>
